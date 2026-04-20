@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>JanScan Diff Report</title>
+<style>
+  body { background: #0d1117; color: #e6edf3; font-family: monospace; font-size: 14px; margin: 0; padding: 24px; }
+  .container { max-width: 1000px; margin: 0 auto; }
+  h1 { color: #ff4444; margin-bottom: 8px; }
+  .meta { color: #8b949e; margin-bottom: 32px; font-size: 0.9em; }
+  .score-bar { display: flex; gap: 32px; margin-bottom: 28px; background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; }
+  .score-box { text-align: center; }
+  .score-box .val { font-size: 2.5em; font-weight: bold; }
+  .score-box .label { color: #8b949e; font-size: 0.8em; }
+  .delta { font-size: 2em; font-weight: bold; align-self: center; }
+  .section { margin-bottom: 28px; }
+  .section h2 { font-size: 1em; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #30363d; }
+  .new h2 { color: #ff4444; }
+  .resolved h2 { color: #00ff88; }
+  .unchanged h2 { color: #8b949e; }
+  .finding-row { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 10px 14px; margin-bottom: 8px; }
+  .finding-row .badge { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 0.72em; font-weight: bold; margin-right: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>JanScan — Scan Comparison</h1>
+  <div class="meta">Comparing scan #{{ scan_a.id }} ({{ scan_a.started_at | string | truncate(10, True, '') }}) → scan #{{ scan_b.id }} ({{ scan_b.started_at | string | truncate(10, True, '') }}) &nbsp;|&nbsp; Generated: {{ generated_at }}</div>
+
+  <div class="score-bar">
+    <div class="score-box">
+      <div class="val" style="color: #8b949e">{{ scan_a.overall_score }}</div>
+      <div class="label">Scan #{{ scan_a.id }} Score</div>
+    </div>
+    <div class="delta" style="color: {{ '#00ff88' if score_delta > 0 else ('#ff4444' if score_delta < 0 else '#8b949e') }}">
+      {{ '+' if score_delta > 0 else '' }}{{ score_delta }}
+    </div>
+    <div class="score-box">
+      <div class="val" style="color: {{ '#00ff88' if scan_b.overall_score >= scan_a.overall_score else '#ff4444' }}">{{ scan_b.overall_score }}</div>
+      <div class="label">Scan #{{ scan_b.id }} Score</div>
+    </div>
+  </div>
+
+  <div class="section new">
+    <h2>⚠ New Issues ({{ new | length }})</h2>
+    {% if not new %}<p style="color: #8b949e">No new issues.</p>{% endif %}
+    {% for f in new %}
+    <div class="finding-row">
+      <span class="badge" style="background: #ff2222; color: #000">{{ f.severity }}</span>
+      <strong>{{ f.module_name }}:</strong> {{ f.title }}
+      {% if f.recommendation %}<div style="color: #58a6ff; font-size: 0.82em; margin-top: 4px;">→ {{ f.recommendation }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="section resolved">
+    <h2>✓ Resolved Issues ({{ resolved | length }})</h2>
+    {% if not resolved %}<p style="color: #8b949e">No resolved issues.</p>{% endif %}
+    {% for f in resolved %}
+    <div class="finding-row" style="border-color: #00ff88">
+      <span class="badge" style="background: #00ff88; color: #000">FIXED</span>
+      <strong>{{ f.module_name }}:</strong> {{ f.title }}
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="section unchanged">
+    <h2>~ Unchanged ({{ unchanged_count }} findings)</h2>
+    <p style="color: #8b949e; font-size: 0.9em">{{ unchanged_count }} findings present in both scans.</p>
+  </div>
+
+  <footer style="color: #8b949e; font-size: 0.8em; margin-top: 32px; padding-top: 16px; border-top: 1px solid #30363d;">
+    JanScan v1.0.0 &nbsp;|&nbsp; {{ generated_at }}
+  </footer>
+</div>
+</body>
+</html>
